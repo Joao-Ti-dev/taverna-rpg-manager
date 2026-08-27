@@ -1,24 +1,25 @@
-import { QuickSQLite } from 'react-native-quick-sqlite';
+import { open } from 'react-native-quick-sqlite';
+
+const NOME_BANCO = 'TavernaRPG_Tormenta20.db';
 
 let db = null;
 
 export function obterConexaoBanco() {
   if (!db) {
-    db = QuickSQLite.open('TavernaRPG_Tormenta20.db');
+    console.log('🗄️ Abrindo banco:', NOME_BANCO);
+
+    db = open({
+      name: NOME_BANCO,
+    });
   }
+
   return db;
 }
 
 export function inicializarBancoDeDados() {
   try {
     const banco = obterConexaoBanco();
-    
-    if (!banco) {
-      console.log("⏳ Aguardando carregamento do driver nativo...");
-      return;
-    }
 
-    // Criação da tabela de usuários
     banco.execute(`
       CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,7 +28,6 @@ export function inicializarBancoDeDados() {
       );
     `);
 
-    // Criação da tabela de fichas (Tormenta20)
     banco.execute(`
       CREATE TABLE IF NOT EXISTS personagens (
         id TEXT PRIMARY KEY,
@@ -54,8 +54,39 @@ export function inicializarBancoDeDados() {
       );
     `);
 
-    console.log('🔮 Banco de Dados QuickSQLite pronto para a mesa!');
+    console.log('🔮 Banco de dados inicializado com sucesso!');
+
+    return banco;
+
   } catch (error) {
-    console.error('❌ Erro ao criar tabelas no QuickSQLite:', error);
+    console.error(
+      '❌ Erro ao inicializar banco:',
+      error
+    );
+
+    throw error;
+  }
+}
+
+export function verificarUsuarios() {
+  try {
+    const banco = obterConexaoBanco();
+
+    const resultado = banco.execute(
+      'SELECT id, email FROM usuarios'
+    );
+
+    console.log('📋 USUÁRIOS NO BANCO:');
+    console.log(resultado?.rows);
+
+    return resultado;
+
+  } catch (error) {
+    console.error(
+      '❌ Erro ao consultar usuários:',
+      error
+    );
+
+    return null;
   }
 }

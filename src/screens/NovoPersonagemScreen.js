@@ -81,39 +81,64 @@ export default function NovoPersonagemScreen({ navigation }) {
     setMagiaQtdDados('1');
   };
 
-   const salvarPersonagem = () => {
-    if (!nome || !classe) {
-      Alert.alert('Erro', 'Por favor, preencha pelo menos o Nome e a Classe do herói.');
-      return;
-    }
-
-   // Pega única e exclusivamente o e-mail real de quem está logado na sessão
-    const emailDono = usuarioLogado?.email ? usuarioLogado.email.toLowerCase().trim() : '';
-
-
-    // Envia rigorosamente na ordem dos 15 parâmetros exigidos pelo contexto
-    adicionarPersonagem(
-      emailDono,
-      nome,
-      classe,
-      raca,
-      origem,
-      divindade,
-      hp,
-      forca,
-      destreza,
-      constituicao,
-      inteligencia,
-      sabedoria,
-      carisma,
-      periciasEscolhidas,
-      magiasLista
+const salvarPersonagem = () => {
+  if (!nome || !classe) {
+    Alert.alert(
+      'Erro',
+      'Por favor, preencha pelo menos o Nome e a Classe do herói.'
     );
+    return;
+  }
 
-    Alert.alert('Sucesso', `${nome} foi registrado na guilda!`, [
-      { text: 'OK', onPress: () => navigation.goBack() }
-    ]);
-  };
+  const emailDono = usuarioLogado?.email
+    ? usuarioLogado.email.toLowerCase().trim()
+    : '';
+
+  if (!emailDono) {
+    Alert.alert(
+      'Erro',
+      'Não foi possível identificar o usuário logado.'
+    );
+    return;
+  }
+
+  const sucesso = adicionarPersonagem(
+    emailDono,
+    nome,
+    classe,
+    raca,
+    origem,
+    divindade,
+    hp,
+    forca,
+    destreza,
+    constituicao,
+    inteligencia,
+    sabedoria,
+    carisma,
+    periciasEscolhidas,
+    magiasLista
+  );
+
+  if (!sucesso) {
+    Alert.alert(
+      'Erro',
+      'Não foi possível salvar o personagem.'
+    );
+    return;
+  }
+
+  Alert.alert(
+    'Sucesso',
+    `${nome} foi registrado na guilda!`,
+    [
+      {
+        text: 'OK',
+        onPress: () => navigation.goBack(),
+      },
+    ]
+  );
+};
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
