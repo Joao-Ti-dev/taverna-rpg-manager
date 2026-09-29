@@ -1,34 +1,45 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import AuthProvider, { AuthContext } from './src/screens/AuthContext.js';
 import PersonagemProvider from './src/screens/PersonagemContext.js';
 
-// Importando as suas telas normalmente
+// Importando as telas existentes
 import LoginScreen from './src/screens/LoginScreen';
 import CadastroScreen from './src/screens/CadastroScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import NovoPersonagemScreen from './src/screens/NovoPersonagemScreen';
 import VisualizarFichaScreen from './src/screens/VisualizarFichaScreen';
 
+// 1️⃣ Importe as novas telas de recuperação de senha
+import EsqueciSenhaScreen from './src/screens/EsqueciSenhaScreen';
+import NovaSenhaScreen from './src/screens/NovaSenhaScreen';
+
 function NavegadorPrincipal() {
   const { carregando } = useContext(AuthContext);
   
-  // Força o aplicativo a sempre começar obrigatoriamente na tela de Login
   const [currentScreen, setCurrentScreen] = useState('Login');
   const [personagemSelecionado, setPersonagemSelecionado] = useState(null);
+  
+  // 2️⃣ Estado temporário para guardar o e-mail que vai passar de uma tela para a outra
+  const [emailRecuperacao, setEmailRecuperacao] = useState('');
 
   const navigationMock = {
     navigate: (screenName, params) => {
-      if (params && params.personagem) {
-        setPersonagemSelecionado(params.personagem);
+      // Se houver parâmetros sendo passados (como o e-mail ou o personagem)
+      if (params) {
+        if (params.personagem) {
+          setPersonagemSelecionado(params.personagem);
+        }
+        if (params.email) {
+          setEmailRecuperacao(params.email);
+        }
       }
       setCurrentScreen(screenName);
     },
     replace: (screenName) => setCurrentScreen(screenName),
-    goBack: () => setCurrentScreen('Home')
+    goBack: () => setCurrentScreen('Login') // Ajustado para voltar para o Login de forma segura
   };
 
-  // Mostra o carregamento enquanto o celular lê as contas salvas no disco
   if (carregando) {
     return (
       <View style={[styles.container, { justifyContent: 'center' }]}>
@@ -41,6 +52,16 @@ function NavegadorPrincipal() {
     <View style={styles.container}>
       {currentScreen === 'Login' && <LoginScreen navigation={navigationMock} />}
       {currentScreen === 'Cadastro' && <CadastroScreen navigation={navigationMock} />}
+      
+      {/* 3️⃣ Adicione as rotas das novas telas aqui */}
+      {currentScreen === 'EsqueciSenha' && <EsqueciSenhaScreen navigation={navigationMock} />}
+      {currentScreen === 'NovaSenha' && (
+        <NovaSenhaScreen 
+          navigation={navigationMock} 
+          route={{ params: { email: emailRecuperacao } }} 
+        />
+      )}
+
       {currentScreen === 'Home' && <HomeScreen navigation={navigationMock} />}
       {currentScreen === 'NovoPersonagem' && <NovoPersonagemScreen navigation={navigationMock} />}
       {currentScreen === 'VisualizarFicha' && (

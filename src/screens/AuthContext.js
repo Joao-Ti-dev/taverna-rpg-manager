@@ -141,13 +141,54 @@ const cadastrarUsuario = (email, senha) => {
   }
 };
 
+
+const alterarSenha = (email, novaSenha) => {
+    const emailLimpo = String(email || '').toLowerCase().trim();
+    const senhaLimpa = String(novaSenha || '');
+
+    if (!emailLimpo || !senhaLimpa) {
+      console.log('⚠️ E-mail ou nova senha inválidos.');
+      return false;
+    }
+
+    try {
+      const db = obterConexaoBanco();
+
+      // Verifica se o usuário existe
+      const resultadoBusca = db.execute(
+        'SELECT id FROM usuarios WHERE email = ?',
+        [emailLimpo]
+      );
+
+      const usuarios = resultadoBusca?.rows?._array || [];
+
+      if (usuarios.length === 0) {
+        console.log('❌ E-mail não encontrado no banco.');
+        return false;
+      }
+
+      // Atualiza a senha no SQLite
+      db.execute(
+        'UPDATE usuarios SET senha = ? WHERE email = ?',
+        [senhaLimpa, emailLimpo]
+      );
+
+      console.log('✅ Senha alterada com sucesso para:', emailLimpo);
+      return true;
+
+    } catch (error) {
+      console.error('❌ Erro ao alterar senha:', error);
+      return false;
+    }
+  };
+
   const deslogarUsuario = () => {
     setUsuarioLogado(null);
     AsyncStorage.removeItem('@TavernaRPG:sessao');
   };
 
   return (
-    <AuthContext.Provider value={{ usuarioLogado, carregando, cadastrarUsuario, validarLogin, deslogarUsuario }}>
+    <AuthContext.Provider value={{ usuarioLogado, carregando, cadastrarUsuario, validarLogin, deslogarUsuario, alterarSenha }}>
       {children}
     </AuthContext.Provider>
   );

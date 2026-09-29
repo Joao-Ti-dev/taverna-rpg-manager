@@ -1,36 +1,45 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView, TextInput } from 'react-native';
 import { PersonagemContext } from './PersonagemContext.js';
 
 export default function VisualizarFichaScreen({ navigation, personajeInicial }) {
   const { excluirPersonagem, editarPersonagem } = useContext(PersonagemContext);
   
-  // Estado completo garantindo suporte para as perícias treinadas da criação
   const [personagem, setPersonagem] = useState({
-    forca: 10, destreza: 10, constituicao: 10, inteligencia: 10, sabedoria: 10, carisma: 10,
-    hpMax: 10, hpAtual: 10, pmMax: 11, pmAtual: 11, nivel: 2,
-    raca: 'Humano', origem: 'Nenhuma', divindade: 'Nenhuma',
+    forca: 1, destreza: 1, constituicao: 1, inteligencia: 1, sabedoria: 1, carisma: 1,
+    hpMax: 1, hpAtual: 1, pmMax: 11, pmAtual: 11, nivel: 1,
+    raca: 'a', origem: 'a', divindade: 'a', classe: 'Tormenta 20',
     inventario: [],
     periciasTreinadas: [],
     ...personajeInicial
   });
 
   const [abaAtiva, setAbaAtiva] = useState('Ficha');
-  const [novoItem, setNovoItem] = useState(''); // Estado para digitar novo equipamento
+  const [novoItem, setNovoItem] = useState(''); 
   const [novoEquipamento, setNovoEquipamento] = useState(''); 
 
-  // Função matemática oficial de Tormenta20 para gerar o modificador menor
+  useEffect(() => {
+    if (personajeInicial) {
+      setPersonagem(prev => ({
+        ...prev,
+        ...personajeInicial
+      }));
+    }
+  }, [personajeInicial]);
+
   const calcularModificador = (valorAtributo) => {
-    return Math.floor((valorAtributo - 10) / 2);
+    const valor = parseInt(valorAtributo, 10) || 1;
+    const mod = Math.floor((valor - 10) / 2);
+    return mod >= 0 ? `+${mod}` : `${mod}`;
   };
 
   const alterarValor = (campo, valor) => {
-    const atualizado = { ...personagem, [campo]: (personagem[campo] || 0) + valor };
+    const valorAtualNum = parseInt(personagem[campo], 10) || 1;
+    const atualizado = { ...personagem, [campo]: valorAtualNum + valor };
     setPersonagem(atualizado);
     editarPersonagem(atualizado);
   };
 
-  // Funções para gerenciar o inventário diretamente na ficha criada
   const adicionarEquipamento = () => {
     if (!novoItem.trim()) return;
     const listaAtualizada = [...(personagem.inventario || []), novoItem.trim()];
@@ -47,7 +56,6 @@ export default function VisualizarFichaScreen({ navigation, personajeInicial }) 
     editarPersonagem(atualizado);
   };
 
-  // Modificadores calculados automaticamente em tempo real
   const modFOR = calcularModificador(personagem.forca);
   const modDES = calcularModificador(personagem.destreza);
   const modCON = calcularModificador(personagem.constituicao);
@@ -55,16 +63,16 @@ export default function VisualizarFichaScreen({ navigation, personajeInicial }) 
   const modSAB = calcularModificador(personagem.sabedoria);
   const modCAR = calcularModificador(personagem.carisma);
 
-  // Defesa automática baseada em T20: 10 + Modificador de Destreza
-  const defesaTotal = 10 + modDES;
+  const numModDES = Math.floor(((parseInt(personagem.destreza, 10) || 1) - 10) / 2);
+  const defesaTotal = 10 + numModDES;
 
   return (
     <View style={styles.containerContainer}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+      <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backButton}>
         <Text style={styles.backText}>⬅ Voltar para a Lista</Text>
       </TouchableOpacity>
 
-          {/* Menu de Abas Superior Atualizado para 3 Opções */}
+      {/* Menu de Abas Superior */}
       <View style={styles.abasContainer}>
         <TouchableOpacity style={[styles.abaBtn, abaAtiva === 'Ficha' && styles.abaAtiva]} onPress={() => setAbaAtiva('Ficha')}>
           <Text style={[styles.abaTexto, abaAtiva === 'Ficha' && styles.abaTextoAtivo]}>Ficha</Text>
@@ -77,17 +85,15 @@ export default function VisualizarFichaScreen({ navigation, personajeInicial }) 
         </TouchableOpacity>
       </View>
 
-
       <ScrollView contentContainerStyle={styles.content}>
         {abaAtiva === 'Ficha' ? (
           <View>
-             {/* --- CABEÇALHO COMPLETO T20 COM EDITOR DE NÍVEL --- */}
+             {/* --- CABEÇALHO --- */}
             <View style={styles.headerCard}>
               <Text style={styles.sistemaBadge}>TORMENTA 20</Text>
-              <Text style={styles.nome}>{personagem.nome}</Text>
-              <Text style={styles.subInfo}>{personagem.raca} • {personagem.origem} • {personagem.classe} • {personagem.divindade}</Text>
+              <Text style={styles.nome}>{personagem.nome || 'a'}</Text>
+              <Text style={styles.subInfo}>{personagem.raca} • {personagem.origem} • {personagem.divindade} • {personagem.divindade}</Text>
               
-              {/* Controles para alterar o nível em tempo real */}
               <View style={styles.rowNivelEditor}>
                 <Text style={styles.nivelTexto}>Nível do Personagem: {personagem.nivel}</Text>
                 <View style={styles.botoesNivelRow}>
@@ -100,7 +106,6 @@ export default function VisualizarFichaScreen({ navigation, personajeInicial }) 
                 </View>
               </View>
             </View>
-
 
             {/* --- STATUS VITAIS & DEFESA --- */}
             <View style={styles.rowStatusVitais}>
@@ -125,41 +130,40 @@ export default function VisualizarFichaScreen({ navigation, personajeInicial }) 
               <View style={[styles.boxVital, { borderColor: '#e6a100' }]}>
                 <Text style={styles.vitalTitulo}>DEFESA TOTAL</Text>
                 <Text style={styles.vitalValor}>{defesaTotal}</Text>
-                <Text style={styles.defesaFormula}>10 + DES ({modDES >= 0 ? `+${modDES}` : modDES})</Text>
+                <Text style={styles.defesaFormula}>10 + DES ({modDES})</Text>
               </View>
             </View>
 
-            {/* --- ESCUDOS DE ATRIBUTOS COM MODIFICADORES --- */}
+            {/* --- ATRIBUTOS & MODIFICADORES --- */}
             <Text style={styles.secaoTituloGlobal}>ATRIBUTOS & MODIFICADORES</Text>
             <View style={styles.gridAtributos}>
               {[
-                { chave: 'forca', label: 'FOR', mod: modFOR }, { chave: 'destreza', label: 'DES', mod: modDES },
-                { chave: 'constituicao', label: 'CON', mod: modCON }, { chave: 'inteligencia', label: 'INT', mod: modINT },
-                { chave: 'sabedoria', label: 'SAB', mod: modSAB }, { chave: 'carisma', label: 'CAR', mod: modCAR }
+                { chave: 'forca', label: 'FOR', mod: modFOR, numMod: Math.floor(((parseInt(personagem.forca, 10) || 1) - 10) / 2) },
+                { chave: 'destreza', label: 'DES', mod: modDES, numMod: numModDES },
+                { chave: 'constituicao', label: 'CON', mod: modCON, numMod: Math.floor(((parseInt(personagem.constituicao, 10) || 1) - 10) / 2) },
+                { chave: 'inteligencia', label: 'INT', mod: modINT, numMod: Math.floor(((parseInt(personagem.inteligencia, 10) || 1) - 10) / 2) },
+                { chave: 'sabedoria', label: 'SAB', mod: modSAB, numMod: Math.floor(((parseInt(personagem.sabedoria, 10) || 1) - 10) / 2) },
+                { chave: 'carisma', label: 'CAR', mod: modCAR, numMod: Math.floor(((parseInt(personagem.carisma, 10) || 1) - 10) / 2) }
               ].map((attr) => (
-                              <View key={attr.chave} style={styles.cardAtributoT20}>
-                  {/* Letra do Atributo (Ex: FOR) - Fica estática */}
+                <View key={attr.chave} style={styles.cardAtributoT20}>
                   <Text style={styles.labelAttrT20}>{attr.label}</Text>
                   
-                  {/* Clique isolado APENAS em cima do número grande do Atributo */}
                   <TouchableOpacity 
                     onPress={() => {
                       const resultadoDado = Math.floor(Math.random() * 20) + 1;
-                      const resultadoFinal = resultadoDado + attr.mod;
+                      const resultadoFinal = resultadoDado + attr.numMod;
                       Alert.alert(
                         `🎲 Teste de ${attr.label}`,
-                        `Dado: ${resultadoDado}\nModificador: ${attr.mod >= 0 ? `+${attr.mod}` : attr.mod}\n\n🏆 TOTAL: ${resultadoFinal}`
+                        `Dado: ${resultadoDado}\nModificador: ${attr.mod}\n\n🏆 TOTAL: ${resultadoFinal}`
                       );
                     }}
                     style={styles.numeroClickArea}
                   >
-                    <Text style={styles.valorAttrT20}>{personagem[attr.chave] || 0}</Text>
+                    <Text style={styles.valorAttrT20}>{personagem[attr.chave] || 1}</Text>
                   </TouchableOpacity>
 
-                  {/* Modificador menor em texto estático */}
-                  <Text style={styles.modTextT20}>{attr.mod >= 0 ? `+${attr.mod}` : attr.mod}</Text>
+                  <Text style={styles.modTextT20}>{attr.mod}</Text>
                   
-                  {/* Botões de + e - independentes embaixo */}
                   <View style={styles.botoesAttrRow}>
                     <TouchableOpacity style={styles.btnAttr} onPress={() => alterarValor(attr.chave, -1)}>
                       <Text style={styles.btnTextoAttr}>-</Text>
@@ -169,13 +173,11 @@ export default function VisualizarFichaScreen({ navigation, personajeInicial }) 
                     </TouchableOpacity>
                   </View>
                 </View>
-
               ))}
             </View>
-                </View>
+          </View>
         ) : (
           <>
-            {/* 🎒 ABA 2: EXIBE APENAS AS PERÍCIAS E A MOCHILA */}
             {abaAtiva === 'Mochila' && (
               <View>
                 <Text style={styles.secaoTituloGlobal}>PERÍCIAS OFICIAIS (TOTAL)</Text>
@@ -183,20 +185,34 @@ export default function VisualizarFichaScreen({ navigation, personajeInicial }) 
                 
                 <View style={styles.gridPericias}>
                   {[
-                    { nome: 'Acrobacia', mod: modDES, label: 'DES' }, { nome: 'Adestramento', mod: modCAR, label: 'CAR' },
-                    { nome: 'Atletismo', mod: modFOR, label: 'FOR' }, { nome: 'Atuação', mod: modCAR, label: 'CAR' },
-                    { nome: 'Cavalgar', mod: modDES, label: 'DES' }, { nome: 'Conhecimento', mod: modINT, label: 'INT' },
-                    { nome: 'Cura', mod: modSAB, label: 'SAB' }, { nome: 'Diplomacia', mod: modCAR, label: 'CAR' },
-                    { nome: 'Enganação', mod: modCAR, label: 'CAR' }, { nome: 'Fortitude', mod: modCON, label: 'CON' },
-                    { nome: 'Furtividade', mod: modDES, label: 'DES' }, { nome: 'Guerra', mod: modINT, label: 'INT' },
-                    { nome: 'Iniciativa', mod: modDES, label: 'DES' }, { nome: 'Intimidação', mod: modCAR, label: 'CAR' },
-                    { nome: 'Intuição', mod: modSAB, label: 'SAB' }, { nome: 'Investigação', mod: modINT, label: 'INT' },
-                    { nome: 'Jogatina', mod: modCAR, label: 'CAR' }, { nome: 'Ladinagem', mod: modDES, label: 'DES' },
-                    { nome: 'Luta', mod: modFOR, label: 'FOR' }, { nome: 'Misticismo', mod: modINT, label: 'INT' },
-                    { nome: 'Nobreza', mod: modINT, label: 'INT' }, { nome: 'Percepção', mod: modSAB, label: 'SAB' },
-                    { nome: 'Pilotagem', mod: modDES, label: 'DES' }, { nome: 'Pontaria', mod: modDES, label: 'DES' },
-                    { nome: 'Reflexos', mod: modDES, label: 'DES' }, { nome: 'Religião', mod: modSAB, label: 'SAB' },
-                    { nome: 'Sobrevivência', mod: modSAB, label: 'SAB' }, { nome: 'Vontade', mod: modSAB, label: 'SAB' }
+                    { nome: 'Acrobacia', mod: Math.floor(((parseInt(personagem.destreza, 10) || 1) - 10) / 2), label: 'DES' },
+                    { nome: 'Adestramento', mod: Math.floor(((parseInt(personagem.carisma, 10) || 1) - 10) / 2), label: 'CAR' },
+                    { nome: 'Atletismo', mod: Math.floor(((parseInt(personagem.forca, 10) || 1) - 10) / 2), label: 'FOR' },
+                    { nome: 'Atuação', mod: Math.floor(((parseInt(personagem.carisma, 10) || 1) - 10) / 2), label: 'CAR' },
+                    { nome: 'Cavalgar', mod: Math.floor(((parseInt(personagem.destreza, 10) || 1) - 10) / 2), label: 'DES' },
+                    { nome: 'Conhecimento', mod: Math.floor(((parseInt(personagem.inteligencia, 10) || 1) - 10) / 2), label: 'INT' },
+                    { nome: 'Cura', mod: Math.floor(((parseInt(personagem.sabedoria, 10) || 1) - 10) / 2), label: 'SAB' },
+                    { nome: 'Diplomacia', mod: Math.floor(((parseInt(personagem.carisma, 10) || 1) - 10) / 2), label: 'CAR' },
+                    { nome: 'Enganação', mod: Math.floor(((parseInt(personagem.carisma, 10) || 1) - 10) / 2), label: 'CAR' },
+                    { nome: 'Fortitude', mod: Math.floor(((parseInt(personagem.constituicao, 10) || 1) - 10) / 2), label: 'CON' },
+                    { nome: 'Furtividade', mod: Math.floor(((parseInt(personagem.destreza, 10) || 1) - 10) / 2), label: 'DES' },
+                    { nome: 'Guerra', mod: Math.floor(((parseInt(personagem.inteligencia, 10) || 1) - 10) / 2), label: 'INT' },
+                    { nome: 'Iniciativa', mod: Math.floor(((parseInt(personagem.destreza, 10) || 1) - 10) / 2), label: 'DES' },
+                    { nome: 'Intimidação', mod: Math.floor(((parseInt(personagem.carisma, 10) || 1) - 10) / 2), label: 'CAR' },
+                    { nome: 'Intuição', mod: Math.floor(((parseInt(personagem.sabedoria, 10) || 1) - 10) / 2), label: 'SAB' },
+                    { nome: 'Investigação', mod: Math.floor(((parseInt(personagem.inteligencia, 10) || 1) - 10) / 2), label: 'INT' },
+                    { nome: 'Jogatina', mod: Math.floor(((parseInt(personagem.carisma, 10) || 1) - 10) / 2), label: 'CAR' },
+                    { nome: 'Ladinagem', mod: Math.floor(((parseInt(personagem.destreza, 10) || 1) - 10) / 2), label: 'DES' },
+                    { nome: 'Luta', mod: Math.floor(((parseInt(personagem.forca, 10) || 1) - 10) / 2), label: 'FOR' },
+                    { nome: 'Misticismo', mod: Math.floor(((parseInt(personagem.inteligencia, 10) || 1) - 10) / 2), label: 'INT' },
+                    { nome: 'Nobreza', mod: Math.floor(((parseInt(personagem.inteligencia, 10) || 1) - 10) / 2), label: 'INT' },
+                    { nome: 'Percepção', mod: Math.floor(((parseInt(personagem.sabedoria, 10) || 1) - 10) / 2), label: 'SAB' },
+                    { nome: 'Pilotagem', mod: Math.floor(((parseInt(personagem.destreza, 10) || 1) - 10) / 2), label: 'DES' },
+                    { nome: 'Pontaria', mod: Math.floor(((parseInt(personagem.destreza, 10) || 1) - 10) / 2), label: 'DES' },
+                    { nome: 'Reflexos', mod: Math.floor(((parseInt(personagem.destreza, 10) || 1) - 10) / 2), label: 'DES' },
+                    { nome: 'Religião', mod: Math.floor(((parseInt(personagem.sabedoria, 10) || 1) - 10) / 2), label: 'SAB' },
+                    { nome: 'Sobrevivência', mod: Math.floor(((parseInt(personagem.sabedoria, 10) || 1) - 10) / 2), label: 'SAB' },
+                    { nome: 'Vontade', mod: Math.floor(((parseInt(personagem.sabedoria, 10) || 1) - 10) / 2), label: 'SAB' }
                   ].map((p, idx) => {
                     const ehTreinada = personagem.periciasTreinadas?.includes(p.nome);
                     const bonusTreino = ehTreinada ? 2 : 0;
@@ -207,7 +223,7 @@ export default function VisualizarFichaScreen({ navigation, personajeInicial }) 
                       const resultadoFinal = resultadoDado + totalPericia;
                       Alert.alert(
                         `🎲 Rolagem de ${p.nome}`,
-                        `Dado: ${resultadoDado}\nBônus: +${totalPericia}\n\n🏆 TOTAL: ${resultadoFinal}`
+                        `Dado: ${resultadoDado}\nBônus: ${totalPericia >= 0 ? `+${totalPericia}` : totalPericia}\n\n🏆 TOTAL: ${resultadoFinal}`
                       );
                     };
 
@@ -218,7 +234,7 @@ export default function VisualizarFichaScreen({ navigation, personajeInicial }) 
                         onPress={rolarPericia}
                       >
                         <Text style={styles.periciaNome} numberOfLines={1}>
-                          {ehTreinada ? '⭐️ ' : ''}{p.nome}
+                          {ehTreinada ? '⭐ ' : ''}{p.nome}
                         </Text>
                         <Text style={styles.periciaTotal}>{totalPericia >= 0 ? `+${totalPericia}` : totalPericia}</Text>
                         <Text style={styles.periciaAttrLabel}>{p.label}</Text>
@@ -259,8 +275,6 @@ export default function VisualizarFichaScreen({ navigation, personajeInicial }) 
               </View>
             )}
 
-
- {/* 🔮 ABA 3: APRENDER E ROLAR MAGIAS EXCLUSIVAS */}
             {abaAtiva === 'Magias' && (
               <View>
                 <Text style={styles.secaoTituloGlobal}>PODERES, HABILIDADES & MAGIAS 🔮</Text>
@@ -297,15 +311,15 @@ export default function VisualizarFichaScreen({ navigation, personajeInicial }) 
 
                         if (textoDado.includes('d')) {
                           const partes = textoDado.split('d');
-                          qtd = parseInt(partes[0]) || 1;
+                          qtd = parseInt(partes[0], 10) || 1;
                           const resto = partes[1] || '20';
                           
                           if (resto.includes('+')) {
                             const subPartes = resto.split('+');
-                            faces = parseInt(subPartes[0]) || 20;
-                            fixo = parseInt(subPartes[1]) || 0;
+                            faces = parseInt(subPartes[0], 10) || 20;
+                            fixo = parseInt(subPartes[1], 10) || 0;
                           } else {
-                            faces = parseInt(resto) || 20;
+                            faces = parseInt(resto, 10) || 20;
                           }
                         }
 
@@ -377,10 +391,17 @@ export default function VisualizarFichaScreen({ navigation, personajeInicial }) 
           </>
         )}
 
-   {/* --- BOTÃO DE EXCLUIR --- */}
+        {/* --- BOTÃO DE EXCLUIR --- */}
         <TouchableOpacity style={styles.btnExcluir} onPress={() => {
           Alert.alert('Apagar', 'Deseja excluir permanentemente esta ficha?', [
-            { text: 'Cancelar' }, { text: 'Sim', onPress: () => { excluirPersonagem(personagem.id); navigation.goBack(); } }
+            { text: 'Cancelar' }, 
+            { 
+              text: 'Sim', 
+              onPress: () => { 
+                excluirPersonagem(personagem.id); 
+                navigation.navigate('ListaPersonagens'); // <--- Coloca aqui exatamente o nome que está no teu App.js
+              } 
+            }
           ]);
         }}>
           <Text style={styles.textoExcluir}>Excluir Ficha do Sistema 🗑️</Text>

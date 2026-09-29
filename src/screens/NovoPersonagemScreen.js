@@ -128,13 +128,14 @@ const salvarPersonagem = () => {
     return;
   }
 
+  // CORREÇÃO AQUI: Mandando direto para a Home de forma limpa
   Alert.alert(
     'Sucesso',
     `${nome} foi registrado na guilda!`,
     [
       {
-        text: 'OK',
-        onPress: () => navigation.goBack(),
+        text: 'Ir para a Taverna',
+        onPress: () => navigation.replace('Home'),
       },
     ]
   );
