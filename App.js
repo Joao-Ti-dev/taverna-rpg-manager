@@ -1,86 +1,72 @@
-import React, { useState, useContext } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useContext } from 'react';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context'; // 👈 Importante!
+
 import AuthProvider, { AuthContext } from './src/screens/AuthContext.js';
 import PersonagemProvider from './src/screens/PersonagemContext.js';
 
-// Importando as telas existentes
+// Telas
 import LoginScreen from './src/screens/LoginScreen';
 import CadastroScreen from './src/screens/CadastroScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import NovoPersonagemScreen from './src/screens/NovoPersonagemScreen';
 import VisualizarFichaScreen from './src/screens/VisualizarFichaScreen';
-
-// 1️⃣ Importe as novas telas de recuperação de senha
 import EsqueciSenhaScreen from './src/screens/EsqueciSenhaScreen';
 import NovaSenhaScreen from './src/screens/NovaSenhaScreen';
 
+const Stack = createNativeStackNavigator();
+
 function NavegadorPrincipal() {
   const { carregando } = useContext(AuthContext);
-  
-  const [currentScreen, setCurrentScreen] = useState('Login');
-  const [personagemSelecionado, setPersonagemSelecionado] = useState(null);
-  
-  // 2️⃣ Estado temporário para guardar o e-mail que vai passar de uma tela para a outra
-  const [emailRecuperacao, setEmailRecuperacao] = useState('');
-
-  const navigationMock = {
-    navigate: (screenName, params) => {
-      // Se houver parâmetros sendo passados (como o e-mail ou o personagem)
-      if (params) {
-        if (params.personagem) {
-          setPersonagemSelecionado(params.personagem);
-        }
-        if (params.email) {
-          setEmailRecuperacao(params.email);
-        }
-      }
-      setCurrentScreen(screenName);
-    },
-    replace: (screenName) => setCurrentScreen(screenName),
-    goBack: () => setCurrentScreen('Login') // Ajustado para voltar para o Login de forma segura
-  };
 
   if (carregando) {
     return (
-      <View style={[styles.container, { justifyContent: 'center' }]}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#d29642" />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {currentScreen === 'Login' && <LoginScreen navigation={navigationMock} />}
-      {currentScreen === 'Cadastro' && <CadastroScreen navigation={navigationMock} />}
-      
-      {/* 3️⃣ Adicione as rotas das novas telas aqui */}
-      {currentScreen === 'EsqueciSenha' && <EsqueciSenhaScreen navigation={navigationMock} />}
-      {currentScreen === 'NovaSenha' && (
-        <NovaSenhaScreen 
-          navigation={navigationMock} 
-          route={{ params: { email: emailRecuperacao } }} 
-        />
-      )}
-
-      {currentScreen === 'Home' && <HomeScreen navigation={navigationMock} />}
-      {currentScreen === 'NovoPersonagem' && <NovoPersonagemScreen navigation={navigationMock} />}
-      {currentScreen === 'VisualizarFicha' && (
-        <VisualizarFichaScreen navigation={navigationMock} personajeInicial={personagemSelecionado} />
-      )}
-    </View>
+    <Stack.Navigator
+      initialRouteName="Login"
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: '#121212' },
+      }}
+    >
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Cadastro" component={CadastroScreen} />
+      <Stack.Screen name="EsqueciSenha" component={EsqueciSenhaScreen} />
+      <Stack.Screen name="NovaSenha" component={NovaSenhaScreen} />
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="NovoPersonagem" component={NovoPersonagemScreen} />
+      <Stack.Screen name="VisualizarFicha" component={VisualizarFichaScreen} />
+    </Stack.Navigator>
   );
 }
 
 export default function App() {
   return (
-    <AuthProvider>
-      <PersonagemProvider>
-        <NavegadorPrincipal />
-      </PersonagemProvider>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <PersonagemProvider>
+          <NavigationContainer>
+            <NavegadorPrincipal />
+          </NavigationContainer>
+        </PersonagemProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#121212',
+  },
 });

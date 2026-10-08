@@ -3,13 +3,13 @@ import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'reac
 import { AuthContext } from './AuthContext';
 
 export default function NovaSenhaScreen({ route, navigation }) {
-  const { email } = route.params; // E-mail passado pela tela anterior
+  const { email } = route.params;
   const { alterarSenha } = useContext(AuthContext);
 
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
 
-  const handleAlterarSenha = () => {
+  const handleAlterarSenha = async () => {
     if (!novaSenha || !confirmarSenha) {
       Alert.alert('Atenção', 'Preencha todos os campos.');
       return;
@@ -25,7 +25,8 @@ export default function NovaSenhaScreen({ route, navigation }) {
       return;
     }
 
-    const sucesso = alterarSenha(email, novaSenha);
+    // Usamos await para aguardar a resposta real da função
+    const sucesso = await alterarSenha(email, novaSenha);
 
     if (sucesso) {
       Alert.alert(
@@ -34,12 +35,12 @@ export default function NovaSenhaScreen({ route, navigation }) {
         [
           { 
             text: 'OK', 
-            onPress: () => navigation.navigate('Login') // Volta para a tela de login
+            onPress: () => navigation.navigate('Login')
           }
         ]
       );
     } else {
-      Alert.alert('Erro', 'Não foi possível alterar a senha. Tente novamente.');
+      Alert.alert('Erro', 'Não foi possível alterar a senha. Verifique se o e-mail existe.');
     }
   };
 
@@ -109,7 +110,7 @@ const styles = StyleSheet.create({
   botao: {
     width: '100%',
     height: 50,
-    backgroundColor: '#28a745', // Verde para indicar sucesso/confirmação
+    backgroundColor: '#28a745',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',

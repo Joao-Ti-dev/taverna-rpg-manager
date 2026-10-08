@@ -1,4 +1,7 @@
 {
   "name": "TAVERNARPG3",
-  "displayName": "TAVERNARPG3"
+  "displayName": "TAVERNARPG3",
+  "plugins": [
+    "expo-sqlite"
+  ]
 }
