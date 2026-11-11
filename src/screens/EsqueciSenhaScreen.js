@@ -1,6 +1,5 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
-import { AuthContext } from './AuthContext';
 import { obterConexaoBanco } from '../database/database.js';
 
 export default function EsqueciSenhaScreen({ navigation }) {
@@ -16,14 +15,17 @@ export default function EsqueciSenhaScreen({ navigation }) {
 
     try {
       const db = obterConexaoBanco();
-      const resultado = db.execute(
+      
+      // Usando o método síncrono correto do expo-sqlite
+      const usuario = db.getFirstSync(
         'SELECT id FROM usuarios WHERE email = ?',
         [emailLimpo]
       );
 
-      const usuarios = resultado?.rows?._array || [];
+      console.log('📧 E-mail pesquisado:', emailLimpo);
+      console.log('✔️ Usuário cadastrado:', usuario);
 
-      if (usuarios.length === 0) {
+      if (!usuario) {
         Alert.alert('E-mail não encontrado', 'Este e-mail não está cadastrado no sistema.');
         return;
       }

@@ -23,13 +23,17 @@ export function inicializarBancoDeDados() {
   try {
     const banco = obterConexaoBanco();
 
+    // Cria a tabela de usuários
     banco.execSync(`
       CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email TEXT UNIQUE NOT NULL,
         senha TEXT NOT NULL
       );
+    `);
 
+    // Cria a tabela de personagens
+    banco.execSync(`
       CREATE TABLE IF NOT EXISTS personagens (
         id TEXT PRIMARY KEY,
         donoDoPersonagem TEXT NOT NULL,
